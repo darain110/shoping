@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <style>
+    </style>
+    <script>
+        function loadtime(){
+            var date=new Date();
+            document.getElementById("time").innerHTML=date.toLocaleTimeString()
+
+            var head=document.querySelector("header");
+            color=parseInt(Math.random()*1000)
+            head.style.backgroundColor="#"+color
+
+        }
+        function bodyload(){
+            setInterval(loadtime,1000)
+            LoadCategories()
+            loadProduct("https://dummyjson.com/products")
+            getCartcount()
+
+        }
+        function LoadCategories(){
+            fetch("https://dummyjson.com/products/categories").then(function(response){
+                return response.json();
+            }).then(function(categories){
+                categories.unshift("home")
+                for( var category of categories){
+                    var opt=document.createElement("option");   
+                    opt.value=category
+                    opt.text=category.toUpperCase()
+                    document.getElementById("lstcategories").appendChild(opt)
+                }
+            })
+        }
+        function loadProduct(url){
+            document.getElementById("lstproduct").innerHTML=""
+            fetch(url).then(function(response){
+                return response.json();
+            }).then(function(items){
+                for( var product of items.products){
+                    var div=document.createElement("div"); 
+                    div.className="card m-3 p-1 bg-warning" 
+                    div.style.width="200px" 
+                    div.innerHTML=`
+                    <img src=${product.thumbnail} height="160px"class="card-img-top">
+                    <div class="card-header"style="height:80px">
+                        <p>${product.title}</p>
+                    </div>
+                    <div class="card-body">
+                        <p>Price : $ ${product.price}</p>
+                        <p>Rating : <span class="bi bi-star-fill text-success"></span> ${product.rating} </p>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-danger w-100"onclick="AddClick(${product.id})"><span class="bi bi-cart"></span>  Add Cart</button>
+                    </div>
+                    `
+                    document.getElementById("lstproduct").appendChild(div);
+                }
+            })
+        }
+        function categoryChange(){
+            var category=document.getElementById("lstcategories").value;
+            if(category=="home"){
+                loadProduct(`https://dummyjson.com/products`)
+            }else{
+                loadProduct(`https://dummyjson.com/products/category/${category}`)
+            }
+        }
+        function Navclick(category){
+            if(category=="home"){
+                loadProduct(`https://dummyjson.com/products`)
+            }else{
+                loadProduct(`https://dummyjson.com/products/category/${category}`)
+            }
+        }
+        count=[]
+        function getCartcount(){
+            document.getElementById("cartcount").innerHTML=count.length
+        }
+        function AddClick(id){
+            fetch(`https://dummyjson.com/products/${id}`).then(function(response){
+                return response.json();
+            }).then(function(products){
+                alert(`${products.title} \n Item Added To Cart`)
+                count.push(products);
+                getCartcount()
+            })
+               
+        }
+        function showClick(){
+            document.querySelector("tbody").innerHTML="";
+            for(var item of count){
+            var tr=document.createElement("tr");
+             var tdname=document.createElement("td");
+             var tdprice=document.createElement("td");
+             var tdpreview=document.createElement("td");
+             var tdremove=document.createElement("td");
+
+             tdname.innerHTML=item.title
+             tdprice.innerHTML="$" + item.price
+             tdpreview.innerHTML=`<img src=${item.thumbnail} width="40px"height="40px">`
+             tdremove.innerHTML=`<button class="btn btn-danger"><span class="bi bi-trash"></span></button>`
+
+             tr.appendChild(tdname)
+             tr.appendChild(tdprice)
+             tr.appendChild(tdpreview)
+             tr.appendChild(tdremove)
+            
+             document.querySelector("tbody").appendChild(tr)
+
+            }
+        }
+        function filterClick(){
+            var categoryChecklist=document.getElementsByName("category");
+            for(var item of categoryChecklist){
+                if(item.checked){
+                    loadProduct(`https://dummyjson.com/products/category/${item.value}`)
+                }
+            }
+        }
+    </script>
+</head>
+<body class="container-fluid"onload="bodyload()">
+    <header class="d-flex justify-content-between  p-2 text-white ">
+        <h3 >Shooping</h3>
+        <h3 id="time"></h3>
+        <div>
+            <button class="btn btn-primary position-relative"data-bs-target="#cartitem" data-bs-toggle="modal"onclick="showClick()"> cart <span class="bi bi-cart4 "><span class="badge position-absolute end-25 bg-danger rounded-5"id="cartcount"></span></span></button>
+        </div>
+    </header>
+    <div class="modal"id="cartitem">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Your Cart Item</h2>
+                    <button class="btn-close"data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Preview</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-danger">Place Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <section class="row mt-1">
+        <nav class="col-3">
+            <select id="lstcategories"class="form-select"onchange="categoryChange()"></select>
+            <div>
+                <h5 >Filter Product</h5>
+                <button class="btn btn-info w-100 mb-2 mt-1"onclick="filterClick()">Apply Filter</button>
+                <ul class="list-unstyled">
+                    <li><input type="checkbox"class="form-check-input"name="category"value="smartphones"> Smartphones</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="laptops"> Laptop</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="fragrances"> Fragrances</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="skincare"> Skincare</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="groceries"> Groceries</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="home-decoration"> Home-Decoration</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="furniture"> Furniture</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="tops"> Tops</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="womens-dresses"> Women-Dresess</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="womens-shoes"> Women-Shoes</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="mens-shirts"> Men-Shirt</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="mens-shoes"> Men-Shoes</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="mens-watches"> Men-Watches</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="womens-watches"> Women-Watches</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="womens-bags"> Women-Bags</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="womens-jewellery"> Women-Jewellery</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="sunglasses"> Sunglasses</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="automotive"> Automotive</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="motorcycle"> Motorcycle</li>
+                    <li><input type="checkbox"class="form-check-input"name="category"value="lighting"> Lighting</li>
+                </ul>
+            </div>
+        </nav>
+        <main class="col-9">
+            <div id="lstproduct"class="d-flex flex-wrap"></div>
+        </main>
+    </section>
+   <script src="../node_modules/jquery/dist/jquery.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
